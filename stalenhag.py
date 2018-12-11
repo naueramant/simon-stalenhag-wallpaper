@@ -27,7 +27,7 @@ def get_random_local_image():
     images = list(filter(lambda s: s.endswith('.jpg'), images))
     
     if images:
-        return IMAGES_DIR + random.choices(images)[0]
+        return IMAGES_DIR + random.choice(images)
     else:
         return None
 
@@ -35,7 +35,7 @@ def get_random_image():
     check_dirs()
     
     images = get_images_list()
-    img = random.choices(images)[0]
+    img = random.choice(images)
     name = img[10:]
 
     if not local_exists(name):
@@ -68,11 +68,11 @@ def set_background(path):
     os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
 
 if __name__ == "__main__":
-    img = None
-    
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         get_all_images()
     else: 
+        img = None
+        
         try:
             img = get_random_image()
         except:
