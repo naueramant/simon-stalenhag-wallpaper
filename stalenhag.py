@@ -57,6 +57,9 @@ def get_all_images():
         
         try:
             download_image(name)
+
+        except KeyboardInterrupt:
+            exit()    
         except:
             print('\r-->', str(index) + ')', name, 'FAILED', end='')
     
