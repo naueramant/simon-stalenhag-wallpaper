@@ -3,6 +3,9 @@
 I made this script for downloading Simon Stålenhag wallpaper from his website and store them locally and apply them as my wallpaper on my Gnome desktop.
 
 Personally i combined this script with a systemd timer so the wallpaper is changed every hour.
+## Requirements
+
+python3, Gnome3 desktop or Ubuntu and Systemd.  
 
 ## How to use
 
