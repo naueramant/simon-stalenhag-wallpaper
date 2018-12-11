@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull the newest image from Simon Stålenhag
+After=NetworkManager-wait-online.service
+
+[Service]
+Type=oneshot
+Environment=DISPLAY=:0
+ExecStart=/usr/local/bin/stalenhag
+
+[Install]
+WantedBy=basic.target

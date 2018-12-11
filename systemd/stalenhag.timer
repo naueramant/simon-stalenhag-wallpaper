@@ -1,0 +1,12 @@
+[Unit]
+Description=Pull the newest image from Simon Stålenhag
+After=NetworkManager-wait-online.service
+
+[Timer]
+Persistent=true
+OnBootSec=2min
+OnUnitActiveSec=1h
+Unit=stalenhag.service
+
+[Install]
+WantedBy=stalenhag.service
