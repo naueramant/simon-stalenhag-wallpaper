@@ -2,6 +2,7 @@
 
 import re, os, sys, random
 from urllib import request
+import dbus
 
 BASE = 'https://www.simonstalenhag.se/'
 IMAGES_DIR = os.path.expanduser('~/Pictures/Stålenhag/')
