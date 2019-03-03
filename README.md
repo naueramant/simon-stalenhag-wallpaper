@@ -9,7 +9,7 @@ python3, Gnome3 desktop or Ubuntu and Systemd.
 
 ## From this fork
 
-Made to work with KDE Plasma 5 desktop.
+Made original https://github.com/naueramant/simon-stalenhag-wallpaper work with KDE Plasma 5 desktop.
 
 ## How to use
 
