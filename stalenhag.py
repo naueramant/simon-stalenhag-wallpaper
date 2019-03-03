@@ -66,9 +66,23 @@ def get_all_images():
         print('')
         index += 1
 
+jscript = """
+var allDesktops = desktops();
+print (allDesktops);
+for (i=0;i<allDesktops.length;i++) {
+    d = allDesktops[i];
+    d.wallpaperPlugin = "org.kde.image";
+    d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");
+    d.writeConfig("Image", "file://%s")
+}
+"""
+
 def set_background(path):
     print('set image', path)
-    os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
+    bus = dbus.SessionBus()
+
+    plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
+    plasma.evaluateScript(jscript % path)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
