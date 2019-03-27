@@ -88,6 +88,14 @@ def set_background(path):
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == 'all':
         get_all_images()
+    elif len(sys.argv) > 1 and sys.argv[1] == 'timerstop':
+        print('Stopping systemd timer')
+        os.system("systemctl stop --user stalenhag.service stalenhag.timer")
+        os.system("systemctl disable --user stalenhag.service stalenhag.timer")
+    elif len(sys.argv) > 1 and sys.argv[1] == 'timerstart':
+        print('Starting systemd timer')
+        os.system("systemctl enable --user stalenhag.service stalenhag.timer")
+        os.system("systemctl start --user stalenhag.service stalenhag.timer")
     else: 
         img = None
         
