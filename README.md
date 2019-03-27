@@ -25,6 +25,13 @@ This will download all images on the website
 python stalenhag.py all
 ```
 
+This will start or stop the Systemd timer.
+
+```sh
+stalenhag timerstart
+stalenhag timerstop
+```
+
 ## systemd
 
 An example of a systemd timer and service can be found in the systemd folder.
