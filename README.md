@@ -32,6 +32,23 @@ stalenhag timerstart
 stalenhag timerstop
 ```
 
+Manage favorite wallpapers
+
+```sh
+stalenhag save
+stalenhag list
+stalenhag -f
+
+stalenhag clear
+```
+
+Get help
+
+```sh
+stalenhag -h
+stalenhag --help
+```
+
 ## systemd
 
 An example of a systemd timer and service can be found in the systemd folder.
