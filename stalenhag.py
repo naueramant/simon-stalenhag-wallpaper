@@ -7,6 +7,7 @@ BASE = 'https://www.simonstalenhag.se/'
 IMAGES_DIR = os.path.expanduser('~/Pictures/Stålenhag/')
 CONFIG_DIR = os.path.expanduser('~/.stalenhag/')
 CONFIG_FILE = os.path.expanduser('~/.stalenhag/config.json')
+DESKTOP = os.environ["DESKTOP_SESSION"]
 
 def check_dirs():
     if not os.path.isdir(IMAGES_DIR):
@@ -116,10 +117,13 @@ def set_background(path):
     if path:
         save_current_background(path)
         print('Setting image: ', path)
-        bus = dbus.SessionBus()
 
-        plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
-        plasma.evaluateScript(jscript % path)
+        if DESKTOP == 'plasma':
+            bus = dbus.SessionBus()
+            plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
+            plasma.evaluateScript(jscript % path)
+        else:
+            os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
     else:
         print('Failed to find a new image')
 
