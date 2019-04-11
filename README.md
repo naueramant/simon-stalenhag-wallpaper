@@ -39,9 +39,15 @@ Manage favorite wallpapers
 ```sh
 stalenhag save
 stalenhag list
+stalenhag listfav
 stalenhag -f
 
 stalenhag clear
+```
+Filter for specific wallpapers
+
+```sh
+stalenhag -filter [search_term]
 ```
 
 Get help
