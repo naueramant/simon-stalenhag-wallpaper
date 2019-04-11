@@ -158,7 +158,13 @@ def clear_favorites():
     c['favorites'] = []
     save_config(c)
 
-def list_favorites():
+def list_wallpapers(all=True):
+    if all:
+        print('Wallpapers online:')
+        for w in get_images_list():
+            print("Image name: " + w)
+
+    print('Favorites:')
     c = get_config()
     fav = c['favorites']
     if len(fav) > 0:
@@ -206,9 +212,10 @@ if __name__ == "__main__":
         elif sys.argv[1] == 'clear':
             print('Clearing favorites')
             clear_favorites()
+        elif sys.argv[1] == 'listfav':
+            list_wallpapers(all=False)
         elif sys.argv[1] == 'list':
-            print('Favorites:')
-            list_favorites()
+            list_wallpapers()
         elif sys.argv[1] == '-f':
             print('Setting background from favorites')
             img = get_random_local_image(favorites=True)
