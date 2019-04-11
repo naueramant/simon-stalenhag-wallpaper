@@ -72,6 +72,22 @@ def get_random_image():
         download_image(name)
 
     return IMAGES_DIR + name
+
+def get_filtered_image(filter_term):
+    check_dirs()
+
+    images_filtered = list(filter(lambda name: filter_term in name, get_images_list()))
+    if len(images_filtered) > 0:
+        print("Found " + str(len(images_filtered)) + " images.")
+        img = random.choice(images_filtered)
+        name = img[10:]
+        if not local_exists(name):
+            download_image(name)
+        return IMAGES_DIR + name
+    else:
+        print("No images found with search term: " + filter_term)
+    
+
     
 def get_all_images():
     check_dirs()
@@ -199,7 +215,11 @@ if __name__ == "__main__":
         else:
             helper()
     elif len(sys.argv) > 2:
-        helper()
+        if sys.argv[1] == '-filter':
+            img = get_filtered_image(sys.argv[2])
+            set_background(img)
+        else:    
+            helper()
     else: 
         try:
             img = get_random_image()
