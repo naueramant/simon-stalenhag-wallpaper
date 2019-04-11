@@ -147,8 +147,11 @@ def save_to_favorites():
     c = get_config()
     favorites = c['favorites']
     current = c['current']
-    favorites.append(current)
-    save_config(c)
+    if current not in favorites:
+        favorites.append(current)
+        save_config(c)
+    else:
+        print("This wallpaper is already favorited")
 
 def clear_favorites():
     c = get_config()
