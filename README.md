@@ -5,7 +5,13 @@ I made this script for downloading Simon Stålenhag wallpaper from his website a
 Personally i combined this script with a systemd timer so the wallpaper is changed every hour.
 ## Requirements
 
-python3, Gnome3 desktop or Ubuntu and Systemd.  
+python3
+Gnome3 desktop or Ubuntu KDE Plasma 5
+Systemd
+
+## From this fork
+
+Made original https://github.com/naueramant/simon-stalenhag-wallpaper work with KDE Plasma 5 desktop.
 
 ## How to use
 
@@ -19,6 +25,30 @@ This will download all images on the website
 
 ```sh
 python stalenhag.py all
+```
+
+This will start or stop the Systemd timer.
+
+```sh
+stalenhag timerstart
+stalenhag timerstop
+```
+
+Manage favorite wallpapers
+
+```sh
+stalenhag save
+stalenhag list
+stalenhag -f
+
+stalenhag clear
+```
+
+Get help
+
+```sh
+stalenhag -h
+stalenhag --help
 ```
 
 ## systemd
