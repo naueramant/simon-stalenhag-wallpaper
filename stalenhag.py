@@ -175,19 +175,23 @@ def list_wallpapers(all=True):
 
 def helper():
     print('''
-    Usage: stalenhag [OPTION]
+    Usage: stalenhag [OPTION] (SEARCH)
     Set and manage favorite Simon Stålenhag wallpapers.
 
-        stalenhag                   Set random wallpaper
+        stalenhag                       Set random wallpaper
 
-        all                         Download all images to local directory
-        timerstart, timerstart      Start or stop Systemd timer
-        save                        Save current wallpaper to favorites
-        list                        List favorite wallpapers
-        clear                       Clear favorites list.
+        OPTIONS:
 
-        -f                          Set random wallpaper from favorites
-        -h, --help                  Get help!
+        -a, --all                       Download all images to local directory
+        --timerstart 
+        --timerstop                     Start or stop Systemd timer
+        -s, --save                      Save current wallpaper to favorites
+        -l, --list, --listfav           List (favorite) wallpapers
+        -c, --clear                     Clear favorites list.
+        -f, --filter [SEARCH]           Filter/search for specific wallpapers
+
+        --fav                           Set random wallpaper from favorites
+        -h, --help                      Get help!
     ''')
 
 
@@ -196,36 +200,36 @@ if __name__ == "__main__":
     img = None
 
     if len(sys.argv) == 2:
-        if sys.argv[1] == 'all':
+        if sys.argv[1] in ['-a','--all']:
             get_all_images()
-        elif sys.argv[1] == 'timerstop':
+        elif sys.argv[1] == '--timerstop':
             print('Stopping systemd timer')
             os.system("systemctl stop --user stalenhag.service stalenhag.timer")
             os.system("systemctl disable --user stalenhag.service stalenhag.timer")
-        elif sys.argv[1] == 'timerstart':
+        elif sys.argv[1] == '--timerstart':
             print('Starting systemd timer')
             os.system("systemctl enable --user stalenhag.service stalenhag.timer")
             os.system("systemctl start --user stalenhag.service stalenhag.timer")
-        elif sys.argv[1] == 'save':
+        elif sys.argv[1] in ['-s', '--save']:
             print('Saving current background to favorites')
             save_to_favorites()
-        elif sys.argv[1] == 'clear':
+        elif sys.argv[1] in ['-c', '--clear']:
             print('Clearing favorites')
             clear_favorites()
-        elif sys.argv[1] == 'listfav':
+        elif sys.argv[1] == '--listfav':
             list_wallpapers(all=False)
-        elif sys.argv[1] == 'list':
+        elif sys.argv[1] in ['-l', '--list']:
             list_wallpapers()
-        elif sys.argv[1] == '-f':
+        elif sys.argv[1] == '--fav':
             print('Setting background from favorites')
             img = get_random_local_image(favorites=True)
             set_background(img)
-        elif sys.argv[1] == '-h' or sys.argv[1] == '--help':
+        elif sys.argv[1] in ['-h', '--help']:
             helper()
         else:
             helper()
     elif len(sys.argv) > 2:
-        if sys.argv[1] == '-filter':
+        if sys.argv[1] in ['-f','--filter']:
             img = get_filtered_image(sys.argv[2])
             set_background(img)
         else:    
