@@ -4,6 +4,7 @@ import re, os, sys, random, dbus, json
 from urllib import request
 
 BASE = 'https://www.simonstalenhag.se/'
+BASE_PALEO = 'http://www.simonstalenhag.se/paleo.html'
 IMAGES_DIR = os.path.expanduser('~/Pictures/Stålenhag/')
 CONFIG_DIR = os.path.expanduser('~/.stalenhag/')
 CONFIG_FILE = os.path.expanduser('~/.stalenhag/config.json')
@@ -20,7 +21,8 @@ def setup_config():
 
     c = {
         'current': '',
-        'favorites': []
+        'favorites': [],
+        'pal': False
     }
 
     save_config(c)
@@ -37,12 +39,15 @@ def local_exists(filename):
     return os.path.isfile(IMAGES_DIR + filename)
 
 def get_images_list():
-    contents = request.urlopen(BASE).read()
-    images = re.findall(r'bilderbig\/[a-zA-Z0-9_]*\.jpg', str(contents))
+    url = BASE if not PALEO else BASE_PALEO
+    contents = request.urlopen(url).read()
+    search = "bilderbig\/{pal}[a-zA-Z0-9_]*\.jpg".format(pal = 'paleo\/' if PALEO else '')
+    images = re.findall(search, str(contents))
     return list(set(images))
 
 def download_image(name):
-    request.urlretrieve(BASE + 'bilderbig/' + name, IMAGES_DIR + name)
+    url = f'{BASE}bilderbig/{"paleo/" if PALEO else ""}{name}'
+    request.urlretrieve(url, IMAGES_DIR + name)
 
 def get_random_local_image(favorites=False):
 
@@ -68,6 +73,9 @@ def get_random_image():
     img = random.choice(images)
     name = img[10:]
 
+    if PALEO: # Remove '.../paleo/...'
+        name = re.sub('paleo/', '', name)
+
     if not local_exists(name):
         download_image(name)
 
@@ -87,7 +95,15 @@ def get_filtered_image(filter_term):
     else:
         print("No images found with search term: " + filter_term)
     
+def setPaleo():
+    check_dirs()
+    local = get_config()
+    local['pal'] = not local['pal']
+    save_config(local)
 
+def getPaleo():
+    check_dirs()
+    return get_config()['pal']
     
 def get_all_images():
     check_dirs()
@@ -191,9 +207,12 @@ def helper():
         -f, --filter [SEARCH]           Filter/search for specific wallpapers
 
         --fav                           Set random wallpaper from favorites
+        --pal                           Change to Simons paleontology art repertiore. RAWR!
         -h, --help                      Get help!
     ''')
 
+
+PALEO = getPaleo()
 
 if __name__ == "__main__":
 
@@ -224,9 +243,20 @@ if __name__ == "__main__":
             print('Setting background from favorites')
             img = get_random_local_image(favorites=True)
             set_background(img)
+        elif sys.argv[1] == '--pal':
+            setPaleo()
+            PALEO = getPaleo()
+            print(f'{"Changed to dinosaur mode! RAWR!" if PALEO else "Changed to normal mode."}')
+            try:
+                img = get_random_image()
+            except:
+                img = get_random_local_image()
+            
+            set_background(img)
         elif sys.argv[1] in ['-h', '--help']:
             helper()
         else:
+
             helper()
     elif len(sys.argv) > 2:
         if sys.argv[1] in ['-f','--filter']:
