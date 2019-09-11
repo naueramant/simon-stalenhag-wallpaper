@@ -4,6 +4,7 @@ import re, os, sys, random, dbus, json
 from urllib import request
 
 BASE = 'https://www.simonstalenhag.se/'
+BASE_PALEO = 'http://www.simonstalenhag.se/paleo.html'
 IMAGES_DIR = os.path.expanduser('~/Pictures/Stålenhag/')
 CONFIG_DIR = os.path.expanduser('~/.stalenhag/')
 CONFIG_FILE = os.path.expanduser('~/.stalenhag/config.json')
@@ -20,7 +21,8 @@ def setup_config():
 
     c = {
         'current': '',
-        'favorites': []
+        'favorites': [],
+        'pal': False
     }
 
     save_config(c)
@@ -37,12 +39,15 @@ def local_exists(filename):
     return os.path.isfile(IMAGES_DIR + filename)
 
 def get_images_list():
-    contents = request.urlopen(BASE).read()
-    images = re.findall(r'bilderbig\/[a-zA-Z0-9_]*\.jpg', str(contents))
+    url = BASE if not PALEO else BASE_PALEO
+    contents = request.urlopen(url).read()
+    search = "bilderbig\/{pal}[a-zA-Z0-9_]*\.jpg".format(pal = 'paleo\/' if PALEO else '')
+    images = re.findall(search, str(contents))
     return list(set(images))
 
 def download_image(name):
-    request.urlretrieve(BASE + 'bilderbig/' + name, IMAGES_DIR + name)
+    url = f'{BASE}bilderbig/{"paleo/" if PALEO else ""}{name}'
+    request.urlretrieve(url, IMAGES_DIR + name)
 
 def get_random_local_image(favorites=False):
 
@@ -68,6 +73,9 @@ def get_random_image():
     img = random.choice(images)
     name = img[10:]
 
+    if PALEO: # Remove '.../paleo/...'
+        name = re.sub('paleo/', '', name)
+
     if not local_exists(name):
         download_image(name)
 
@@ -87,7 +95,15 @@ def get_filtered_image(filter_term):
     else:
         print("No images found with search term: " + filter_term)
     
+def setPaleo():
+    check_dirs()
+    local = get_config()
+    local['pal'] = not local['pal']
+    save_config(local)
 
+def getPaleo():
+    check_dirs()
+    return get_config()['pal']
     
 def get_all_images():
     check_dirs()
@@ -175,57 +191,75 @@ def list_wallpapers(all=True):
 
 def helper():
     print('''
-    Usage: stalenhag [OPTION]
+    Usage: stalenhag [OPTION] (SEARCH)
     Set and manage favorite Simon Stålenhag wallpapers.
 
-        stalenhag                   Set random wallpaper
+        stalenhag                       Set random wallpaper
 
-        all                         Download all images to local directory
-        timerstart, timerstart      Start or stop Systemd timer
-        save                        Save current wallpaper to favorites
-        list                        List favorite wallpapers
-        clear                       Clear favorites list.
+        OPTIONS:
 
-        -f                          Set random wallpaper from favorites
-        -h, --help                  Get help!
+        -a, --all                       Download all images to local directory
+        --timerstart 
+        --timerstop                     Start or stop Systemd timer
+        -s, --save                      Save current wallpaper to favorites
+        -l, --list, --listfav           List (favorite) wallpapers
+        -c, --clear                     Clear favorites list.
+        -f, --filter [SEARCH]           Filter/search for specific wallpapers
+
+        --fav                           Set random wallpaper from favorites
+        --pal                           Change to Simons paleontology art repertiore. RAWR!
+        -h, --help                      Get help!
     ''')
 
+
+PALEO = getPaleo()
 
 if __name__ == "__main__":
 
     img = None
 
     if len(sys.argv) == 2:
-        if sys.argv[1] == 'all':
+        if sys.argv[1] in ['-a','--all']:
             get_all_images()
-        elif sys.argv[1] == 'timerstop':
+        elif sys.argv[1] == '--timerstop':
             print('Stopping systemd timer')
             os.system("systemctl stop --user stalenhag.service stalenhag.timer")
             os.system("systemctl disable --user stalenhag.service stalenhag.timer")
-        elif sys.argv[1] == 'timerstart':
+        elif sys.argv[1] == '--timerstart':
             print('Starting systemd timer')
             os.system("systemctl enable --user stalenhag.service stalenhag.timer")
             os.system("systemctl start --user stalenhag.service stalenhag.timer")
-        elif sys.argv[1] == 'save':
+        elif sys.argv[1] in ['-s', '--save']:
             print('Saving current background to favorites')
             save_to_favorites()
-        elif sys.argv[1] == 'clear':
+        elif sys.argv[1] in ['-c', '--clear']:
             print('Clearing favorites')
             clear_favorites()
-        elif sys.argv[1] == 'listfav':
+        elif sys.argv[1] == '--listfav':
             list_wallpapers(all=False)
-        elif sys.argv[1] == 'list':
+        elif sys.argv[1] in ['-l', '--list']:
             list_wallpapers()
-        elif sys.argv[1] == '-f':
+        elif sys.argv[1] == '--fav':
             print('Setting background from favorites')
             img = get_random_local_image(favorites=True)
             set_background(img)
-        elif sys.argv[1] == '-h' or sys.argv[1] == '--help':
+        elif sys.argv[1] == '--pal':
+            setPaleo()
+            PALEO = getPaleo()
+            print(f'{"Changed to dinosaur mode! RAWR!" if PALEO else "Changed to normal mode."}')
+            try:
+                img = get_random_image()
+            except:
+                img = get_random_local_image()
+            
+            set_background(img)
+        elif sys.argv[1] in ['-h', '--help']:
             helper()
         else:
+
             helper()
     elif len(sys.argv) > 2:
-        if sys.argv[1] == '-filter':
+        if sys.argv[1] in ['-f','--filter']:
             img = get_filtered_image(sys.argv[2])
             set_background(img)
         else:    
