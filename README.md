@@ -5,9 +5,8 @@ I made this script for downloading Simon Stålenhag wallpaper from his website (
 Personally i combined this script with a systemd timer so the wallpaper is changed every hour.
 ## Requirements
 
-python3
-Gnome3 desktop or Ubuntu KDE Plasma 5
-Systemd
+- python3
+- Gnome3 desktop or KDE Plasma 5
 
 ## From this fork
 
