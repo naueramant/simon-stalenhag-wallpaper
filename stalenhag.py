@@ -14,6 +14,7 @@ class Pages(Enum):
     TALES_FROM_THE_LOOP = f'{BASE}tftl.html'
     THINGS_FROM_THE_FLOOD = f'{BASE}tftf.html'
     THE_ELECTRIC_STATE = f'{BASE}es.html'
+    LABYRINTH = f'{BASE}labyrinth.html'
 
 class Collections(Enum):
     ALL = 'ALL'
@@ -23,13 +24,14 @@ class Collections(Enum):
     TALES = 'TALES_FROM_THE_LOOP'
     THINGS = 'THINGS_FROM_THE_FLOOD'
     ELECTRIC = 'THE_ELECTRIC_STATE'
+    LAB = 'LABYRINTH'
 
 # OS values
 
 PLATFORM = sys.platform
-IMAGES_DIR = os.path.expanduser('~/Pictures/Stålenhag/')
-CONFIG_DIR = os.path.expanduser('~/.stalenhag/')
-CONFIG_FILE = os.path.expanduser('~/.stalenhag/config.json')
+IMAGES_DIR = os.path.expanduser('~|Pictures|Stålenhag|'.replace('|', os.sep))
+CONFIG_DIR = os.path.expanduser('~|.stalenhag|'.replace('|', os.sep))
+CONFIG_FILE = os.path.expanduser('~|.stalenhag|config.json'.replace('|', os.sep))
 if 'win' not in PLATFORM:
     DESKTOP = os.environ["DESKTOP_SESSION"]
     import dbus
@@ -72,18 +74,22 @@ def local_exists(filename):
     return os.path.isfile(IMAGES_DIR + filename)
 
 def get_images_list():
-    urls = [collection.value for collection in getCollections()]
+    collections = getCollections()
+    print(f'Collections: {getCollectionNames(collections)}')
+    print('-----------------------------------')
+    urls = [page.value for _, page in Pages.__members__.items()][1:] if collections[0] == Pages.ALL else [collection.value for collection in collections]
     images = []
     for url in urls:
         contents = request.urlopen(url).read()
-        search = r'bilderbig\/[a-zA-Z0-9_]*\.jpg'
-        print(re.findall(search, str(contents)), str(contents))
-        images.append(re.findall(search, str(contents)))
+        search = r'(?:bilder|paleo|other|tftl|tftf)big\/[a-zA-Z0-9_]*\.jpg'
+        collectionImages = re.findall(search, str(contents))
+        images.extend(collectionImages)
+
     return list(set(images))
 
-def download_image(name, base):
-    url = f'{base}bilderbig/{name}'
-    request.urlretrieve(url, IMAGES_DIR + name)
+def download_image(image):
+    url = f'{BASE}{image}'
+    request.urlretrieve(url, IMAGES_DIR + image.replace('/', '-'))
 
 def get_random_local_image(favorites=False):
 
@@ -106,28 +112,23 @@ def get_random_image():
     check_dirs()
     
     images = get_images_list()
-    img = random.choice(images)
-    name = img[10:]
-
-    if PALEO: # Remove '.../paleo/...'
-        name = re.sub('paleo/', '', name)
+    name = random.choice(images)
 
     if not local_exists(name):
         download_image(name)
 
-    return IMAGES_DIR + name
+    return IMAGES_DIR + name.replace('/', '-')
 
 def get_filtered_image(filter_term):
     check_dirs()
-
-    images_filtered = list(filter(lambda name: filter_term in name, get_images_list()))
+    images = get_images_list()
+    images_filtered = list(filter(lambda name: filter_term in name, images))
     if len(images_filtered) > 0:
         print("Found " + str(len(images_filtered)) + " images.")
-        img = random.choice(images_filtered)
-        name = img[10:]
+        name = random.choice(images_filtered)
         if not local_exists(name):
             download_image(name)
-        return IMAGES_DIR + name
+        return IMAGES_DIR + name.replace('/', '-')
     else:
         print("No images found with search term: " + filter_term)
 
@@ -143,6 +144,11 @@ def getCollections():
     if any([collection == Collections.ALL.name for collection in collections]):
         return [Pages.ALL]
     return [Pages[Collections[collection].value] for collection in collections]
+
+def getCollectionNames(collections=None):
+    if not collections:
+        collections = getCollections()
+    return ", ".join([collection.name.lower().capitalize().replace("_", " ") for collection in collections])
     
 def get_all_images():
     check_dirs()
@@ -152,17 +158,18 @@ def get_all_images():
     print('Found', len(images), 'images')
 
     index = 1
-    for img in images:
-        name = img[10:]
-        print(str(index) + ')', name, end='')
+    for name in images:
+        print(f'{index}: {name} --> Downloading', end='')
         
         try:
             download_image(name)
+            print(f'\r{index}: {name} --> Success    ', end='')
 
         except KeyboardInterrupt:
             exit()    
-        except:
-            print('\r-->', str(index) + ')', name, 'FAILED', end='')
+        except Exception as e:
+            print(e)
+            # print(f'\r{index}: {name} --> Failed     ', end='')
     
         print('')
         index += 1
@@ -180,7 +187,7 @@ for (i=0;i<allDesktops.length;i++) {
 
 def save_current_background(path):
     c = get_config()
-    img = re.findall(r'.*\/([a-zA-Z0-9_]*\.jpg)', path)[0]
+    img = re.findall(r'.*([\--a-zA-Z0-9_]*\.jpg)', path)[0]
     c['current'] = img
     save_config(c)
 
@@ -190,7 +197,6 @@ def set_background(path):
         print('Setting image: ', path)
 
         if 'win' in PLATFORM:
-            print(path)
             SPI_SETDESKWALLPAPER = 20 
             ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, path , 0)
         elif DESKTOP  == 'plasma':
@@ -217,20 +223,20 @@ def clear_favorites():
     c['favorites'] = []
     save_config(c)
 
-def list_wallpapers(all=True):
-    if all:
-        print('Wallpapers online:')
+def list_wallpapers(favorites=False):
+    if favorites:
+        print('Favorites:')
+        c = get_config()
+        fav = c['favorites']
+        if len(fav) > 0:
+            for img in c['favorites']:
+                print('Image name: ' + img)
+        else:
+            print('No favorites. Use "stalenhag save" to save current background.')
+    else:
+        print(f'Wallpapers online - ', end='')
         for w in get_images_list():
             print("Image name: " + w)
-
-    print('Favorites:')
-    c = get_config()
-    fav = c['favorites']
-    if len(fav) > 0:
-        for img in c['favorites']:
-            print('Image name: ' + img)
-    else:
-        print('No favorites. Use "stalenhag save" to save current background.')
 
 
 
@@ -258,10 +264,16 @@ if __name__ == "__main__":
     if args.all:
         get_all_images()
     elif args.timerstop:
+        if 'win' in PLATFORM:
+            print('System timing is not implemented for Windows')
+            quit()
         print('Stopping systemd timer')
         os.system("systemctl stop --user stalenhag.service stalenhag.timer")
         os.system("systemctl disable --user stalenhag.service stalenhag.timer")
     elif args.timerstart:
+        if 'win' in PLATFORM:
+            print('System timing is not implemented for Windows')
+            quit()
         print('Starting systemd timer')
         os.system("systemctl enable --user stalenhag.service stalenhag.timer")
         os.system("systemctl start --user stalenhag.service stalenhag.timer")
@@ -272,7 +284,7 @@ if __name__ == "__main__":
         print('Clearing favorites')
         clear_favorites()
     elif args.listfav:
-        list_wallpapers(all=False)
+        list_wallpapers(favorites=True)
     elif args.list:
         list_wallpapers()
     elif args.fav:
@@ -285,7 +297,6 @@ if __name__ == "__main__":
     elif args.clearconfig:
         clear_config()
     elif args.collections is not None:
-        print(args.collections)
         collections = [collection.upper() for collection in args.collections]
         collection_names = [name for name, _ in Collections.__members__.items()]
         error = len(collections) == 0 or not all([collection in collection_names for collection in collections])
@@ -293,10 +304,10 @@ if __name__ == "__main__":
             print('Please choose a collections from: ')
             for name in collection_names:
                 print(name)
-            print(f'Current collections: {", ".join([collection.name.lower().capitalize().replace("_", " ") for collection in getCollections()])}')
-        setCollections(collections)
-        print(f'Wall papers will be downloaded from: {", ".join([collection.name.lower().capitalize().replace("_", " ") for collection in getCollections()])}')
-    print(args.collections)
+            print(f'Current collections: {getCollectionNames()}')
+        else:
+            setCollections(collections)
+            print(f'Wallpapers will be downloaded from: {getCollectionNames()}')
     # set background
     if len(sys.argv) == 1:
         try:
