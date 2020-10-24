@@ -73,10 +73,11 @@ def save_config(config: dict):
 def local_exists(filename):
     return os.path.isfile(IMAGES_DIR + filename)
 
-def get_images_list():
+def get_images_list(print=False):
     collections = getCollections()
-    print(f'Collections: {getCollectionNames(collections)}')
-    print('-----------------------------------')
+    if print:
+        print(f'Collections: {getCollectionNames(collections)}')
+        print('-----------------------------------')
     urls = [page.value for _, page in Pages.__members__.items()][1:] if collections[0] == Pages.ALL else [collection.value for collection in collections]
     images = []
     for url in urls:
@@ -92,16 +93,14 @@ def download_image(image):
     request.urlretrieve(url, IMAGES_DIR + image.replace('/', '-'))
 
 def get_random_local_image(favorites=False):
-
     images = []
-
     if not favorites:
         images = os.listdir(IMAGES_DIR)
         images = list(filter(lambda s: os.path.isfile(IMAGES_DIR + s), images))
         images = list(filter(lambda s: s.endswith('.jpg'), images))
     else:
         config = get_config()
-        images = list(filter(lambda s:  s != config['current'], config['favorites']))
+        images = list(filter(lambda s:  config['current'] not in s, config['favorites']))
     
     if images:
         return IMAGES_DIR + random.choice(images)
@@ -187,11 +186,11 @@ for (i=0;i<allDesktops.length;i++) {
 
 def save_current_background(path):
     c = get_config()
-    img = re.findall(r'.*([\--a-zA-Z0-9_]*\.jpg)', path)[0]
-    c['current'] = img
+    c['current'] = path.replace(IMAGES_DIR, '')
     save_config(c)
 
 def set_background(path):
+    print(path)
     if path:
         save_current_background(path)
         print('Setting image: ', path)
@@ -235,7 +234,7 @@ def list_wallpapers(favorites=False):
             print('No favorites. Use "stalenhag save" to save current background.')
     else:
         print(f'Wallpapers online - ', end='')
-        for w in get_images_list():
+        for w in get_images_list(print=True):
             print("Image name: " + w)
 
 
@@ -303,7 +302,7 @@ if __name__ == "__main__":
         if error:
             print('Please choose a collections from: ')
             for name in collection_names:
-                print(name)
+                print(f'\t{name.lower()}')
             print(f'Current collections: {getCollectionNames()}')
         else:
             setCollections(collections)
