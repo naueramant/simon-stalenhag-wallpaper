@@ -3,6 +3,7 @@
 import re, os, sys, random, json, argparse
 from enum import Enum
 from urllib import request
+from pathlib import Path
 
 BASE = 'http://www.simonstalenhag.se/'
 
@@ -101,7 +102,7 @@ def get_random_local_image(favorites=False):
     else:
         config = get_config()
         images = list(filter(lambda s:  config['current'] not in s, config['favorites']))
-    
+
     if images:
         return IMAGES_DIR + random.choice(images)
     else:
@@ -109,7 +110,7 @@ def get_random_local_image(favorites=False):
 
 def get_random_image():
     check_dirs()
-    
+
     images = get_images_list()
     name = random.choice(images)
 
@@ -148,7 +149,7 @@ def getCollectionNames(collections=None):
     if not collections:
         collections = getCollections()
     return ", ".join([collection.name.lower().capitalize().replace("_", " ") for collection in collections])
-    
+
 def get_all_images():
     check_dirs()
 
@@ -159,17 +160,17 @@ def get_all_images():
     index = 1
     for name in images:
         print(f'{index}: {name} --> Downloading', end='')
-        
+
         try:
             download_image(name)
             print(f'\r{index}: {name} --> Success    ', end='')
 
         except KeyboardInterrupt:
-            exit()    
+            exit()
         except Exception as e:
             print(e)
             # print(f'\r{index}: {name} --> Failed     ', end='')
-    
+
         print('')
         index += 1
 
@@ -190,14 +191,13 @@ def save_current_background(path):
     save_config(c)
 
 def set_background(path):
-    print(path)
     if path:
         save_current_background(path)
         print('Setting image: ', path)
 
         if 'win' in PLATFORM:
-            SPI_SETDESKWALLPAPER = 20 
-            ctypes.windll.user32.SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, path , 0)
+            path = Path(path).parts
+            ctypes.windll.user32.SystemParametersInfoW(20, 0, os.path.join(*path), 2)
         elif DESKTOP  == 'plasma':
             bus = dbus.SessionBus()
             plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
@@ -257,14 +257,14 @@ windows_bundled = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 def run():
     if windows_bundled:
         parser.print_usage()
+        response = input('Set arguments: ')
         try:
-            args = parser.parse_args(input('Set arguments: ').split())
+            args = parser.parse_args(response.split())
         except:
             return
 
     else:
         args = parser.parse_args()
-
 
     # handle args
     if args.all:
@@ -298,7 +298,7 @@ def run():
         img = get_random_local_image(favorites=True)
         set_background(img)
     elif args.filter:
-            img = get_filtered_image(sys.argv[2])
+            img = get_filtered_image(args.filter)
             set_background(img)
     elif args.clearconfig:
         clear_config()
@@ -320,10 +320,13 @@ def run():
             img = get_random_image()
         except:
             img = get_random_local_image()
-        
-        set_background(img)
 
-run()
-while windows_bundled:
+        set_background(img)
+try:
     run()
-        
+    while windows_bundled:
+        run()
+except Exception as e:
+    response = input(f'Failed with: {e}\nPress any button to quit.')
+
+
