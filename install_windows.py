@@ -33,7 +33,7 @@ if parser.parse_args().uninstall:
 # Install
 print('Installing Stålenhag Wallpaper Application')
 install_loc = os.path.expanduser(f'~{os.sep}.stalenhag/install')
-install_script = f'pyinstaller --noconfirm --onedir --console --distpath="{install_loc}" "./stalenhag.py"'
+install_script = f'pyinstaller --noconfirm --onedir --console --distpath="{install_loc}" --add-data="./tftf_front.ico;." --icon="./tftf_front.ico" "./stalenhag.py"'
 # note: --icon "path/asd.ico"
 os.system(install_script)
 print(f'SUCCESS ---------------------------')
@@ -47,10 +47,9 @@ desktop = winshell.desktop()
 path = os.path.join(desktop, "Stalenhag.lnk")
 target = f"{install_loc}{os.sep}stalenhag{os.sep}stalenhag.exe"
 wDir = f"{install_loc}"
-icon = f"{install_loc}{os.sep}stalenhag{os.sep}stalenhag.exe"
 shell = Dispatch('WScript.Shell')
 shortcut = shell.CreateShortCut(path)
 shortcut.Targetpath = target
 shortcut.WorkingDirectory = wDir
-shortcut.IconLocation = icon
+shortcut.IconLocation = f"{install_loc}{os.sep}stalenhag{os.sep}tftf_front.ico"
 shortcut.save()
