@@ -73,9 +73,9 @@ def save_config(config: dict):
 def local_exists(filename):
     return os.path.isfile(IMAGES_DIR + filename)
 
-def get_images_list(print=False):
+def get_images_list(prints=False):
     collections = getCollections()
-    if print:
+    if prints:
         print(f'Collections: {getCollectionNames(collections)}')
         print('-----------------------------------')
     urls = [page.value for _, page in Pages.__members__.items()][1:] if collections[0] == Pages.ALL else [collection.value for collection in collections]
@@ -234,7 +234,7 @@ def list_wallpapers(favorites=False):
             print('No favorites. Use "stalenhag save" to save current background.')
     else:
         print(f'Wallpapers online - ', end='')
-        for w in get_images_list(print=True):
+        for w in get_images_list(prints=True):
             print("Image name: " + w)
 
 
@@ -252,12 +252,19 @@ parser.add_argument( '--collections', nargs='*', help='Set the default base of i
 parser.add_argument( '--fav', '--favorite', help='Set random wallpaper from favorites', action='store_true')
 parser.add_argument( '--clearconfig' , help='Remove config file', action='store_true')
 
+windows_bundled = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
-if __name__ == "__main__":
+def run():
+    if windows_bundled:
+        parser.print_usage()
+        try:
+            args = parser.parse_args(input('Set arguments: ').split())
+        except:
+            return
 
-    args = parser.parse_args()
-    img = None
-    base = 'ALL'
+    else:
+        args = parser.parse_args()
+
 
     # handle args
     if args.all:
@@ -265,14 +272,14 @@ if __name__ == "__main__":
     elif args.timerstop:
         if 'win' in PLATFORM:
             print('System timing is not implemented for Windows')
-            quit()
+            return()
         print('Stopping systemd timer')
         os.system("systemctl stop --user stalenhag.service stalenhag.timer")
         os.system("systemctl disable --user stalenhag.service stalenhag.timer")
     elif args.timerstart:
         if 'win' in PLATFORM:
             print('System timing is not implemented for Windows')
-            quit()
+            return()
         print('Starting systemd timer')
         os.system("systemctl enable --user stalenhag.service stalenhag.timer")
         os.system("systemctl start --user stalenhag.service stalenhag.timer")
@@ -308,10 +315,15 @@ if __name__ == "__main__":
             setCollections(collections)
             print(f'Wallpapers will be downloaded from: {getCollectionNames()}')
     # set background
-    if len(sys.argv) == 1:
+    if not any(vars(args).values()):
         try:
             img = get_random_image()
         except:
             img = get_random_local_image()
         
         set_background(img)
+
+run()
+while windows_bundled:
+    run()
+        
