@@ -71,3 +71,15 @@ For easy installation and removal you can use the scripts
 # Uninstall (prompts for root)
 ./uninstall.sh
 ```
+
+### Windows
+
+Install as application on Windows.
+```sh
+# Install
+python install_windows.py
+
+# Uninstall
+python install_windows.py -u
+```
+
