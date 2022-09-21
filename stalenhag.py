@@ -204,6 +204,7 @@ def set_background(path):
             plasma.evaluateScript(jscript % path)
         else:
             os.system('gsettings set org.gnome.desktop.background picture-uri file://' + path)
+            os.system('gsettings set org.gnome.desktop.background picture-uri-dark file://' + path)
     else:
         print('Failed to find a new image')
 
